@@ -1,0 +1,149 @@
+{
+  "info": {
+    "_postman_id": "a98e21f4-3456-4b89-a212-aeropulse001",
+    "name": "AeroPulse API - Telemetría de Drones (Seguimiento 2)",
+    "description": "Colección oficial de Postman con las 4 consultas REST para el Seguimiento 2.\n\nContenido:\n1. GET /api/drones?status=en_vuelo (Listar drones en vuelo con filtro)\n2. GET /api/drones/DRN-101 (Detalle y telemetría por ID)\n3. POST /api/missions (Despachar nueva misión de carga)\n4. PATCH /api/drones/DRN-105/status (Actualizar estado operativo del dron)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Listar Drones en Vuelo (GET con Filtro)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/drones?status=en_vuelo",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drones"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "en_vuelo",
+              "description": "Filtrar por estado operativo (en_vuelo, acoplado, retornando, mantenimiento)"
+            }
+          ]
+        },
+        "description": "Consulta 1: Retorna todos los drones actualmente en vuelo con sus métricas de velocidad, altitud y coordenadas GPS."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Consultar Telemetría por ID de Dron (GET)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/drones/DRN-101",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drones",
+            "DRN-101"
+          ]
+        },
+        "description": "Consulta 2: Retorna los datos detallados, sensores de vuelo y misión activa del dron DRN-101."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Despachar Nueva Misión de Carga (POST)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"droneId\": \"DRN-102\",\n  \"cargoType\": \"Kit de Emergencia Médica y Vacunas\",\n  \"weightKg\": 4.2,\n  \"destination\": \"Hospital San Carlos Sector Alfa\",\n  \"priority\": \"ALTA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/missions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "missions"
+          ]
+        },
+        "description": "Consulta 3: Envía una petición POST con cuerpo JSON para asignar y despachar una nueva misión de carga a un dron acoplado."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Actualizar Estado Operativo de Dron (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"acoplado\",\n  \"reason\": \"Batería recargada al 100% en plataforma de carga\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/drones/DRN-105/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "drones",
+            "DRN-105",
+            "status"
+          ]
+        },
+        "description": "Consulta 4: Realiza una actualización parcial (PATCH) del estado operativo del dron DRN-105 a 'acoplado'."
+      },
+      "response": []
+    }
+  ]
+}

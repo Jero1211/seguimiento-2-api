@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroPulse — API REST de Logística y Telemetría de Drones Autónomos</title>
+  <meta name="description" content="Centro de control y API REST de telemetría para flotas de drones autónomos de carga con suite interactiva para pruebas en Postman.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container" id="app-root">
+    
+    <!-- Barra Superior de Navegación y Control -->
+    <header class="control-header" id="main-header">
+      <div class="brand-wrapper">
+        <div class="brand-icon" aria-hidden="true">
+          <!-- Icono de Radar Aeroespacial SVG -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+            <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/>
+            <path d="M12 12l5-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">AeroPulse Telemática</h1>
+          <p class="brand-subtitle">Consola de Despacho y API REST para Espacio Aéreo de Drones</p>
+        </div>
+      </div>
+
+      <div class="system-status-cluster">
+        <div class="status-pill" id="api-status-badge">
+          <span class="status-dot"></span>
+          <span id="api-status-text">API EN LÍNEA (PUERTO 3001)</span>
+        </div>
+        
+        <nav class="nav-tabs" aria-label="Secciones de Navegación">
+          <button class="tab-btn active" id="tab-btn-dashboard" data-tab="dashboard-view" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="5"/>
+              <rect x="14" y="12" width="7" height="9"/>
+              <rect x="3" y="16" width="7" height="5"/>
+            </svg>
+            <span>Control de Flota</span>
+          </button>
+          <button class="tab-btn" id="tab-btn-postman" data-tab="postman-view" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+            <span>Postman y Consultas (4)</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Resumen de Métricas de Flota -->
+    <section class="stats-grid" id="fleet-overview-metrics" aria-label="Resumen de Telemetría de la Flota">
+      <article class="stat-card">
+        <div class="stat-label">
+          <span>Drones en Vuelo</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-airborne)" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="stat-value tabular-nums" id="stat-airborne-count">--</div>
+        <div class="stat-sub">Unidades activas en el aire</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">
+          <span>Acoplados y Listos</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-operational)" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="stat-value tabular-nums" id="stat-docked-count">--</div>
+        <div class="stat-sub">Disponibles para despacho</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">
+          <span>Batería Promedio</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+            <rect x="1" y="6" width="18" height="12" rx="2"/>
+            <path d="M23 13v-2"/>
+          </svg>
+        </div>
+        <div class="stat-value tabular-nums" id="stat-avg-battery">--%</div>
+        <div class="stat-sub">Reserva de potencia de flota</div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">
+          <span>Carga Activa en Tránsito</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-warning)" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+        </div>
+        <div class="stat-value tabular-nums" id="stat-total-payload">-- kg</div>
+        <div class="stat-sub">Masa total de flete en ruta</div>
+      </article>
+    </section>
+
+    <!-- PESTAÑA 1: PANEL DE CONTROL DE FLOTA -->
+    <main id="dashboard-view" class="workspace-grid tab-content">
+      
+      <!-- Columna Izquierda: Explorador de Drones -->
+      <section class="panel" id="fleet-list-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Unidades de Drones Activas
+          </h2>
+          
+          <div class="filter-bar">
+            <label for="filter-status-select" class="visually-hidden" style="display:none;">Filtrar Estado</label>
+            <select id="filter-status-select" class="filter-select">
+              <option value="">Todos los Estados</option>
+              <option value="en_vuelo">En Vuelo</option>
+              <option value="acoplado">Acoplado</option>
+              <option value="retornando">Retornando</option>
+              <option value="mantenimiento">Mantenimiento</option>
+            </select>
+
+            <label for="filter-sector-select" class="visually-hidden" style="display:none;">Filtrar Sector</label>
+            <select id="filter-sector-select" class="filter-select">
+              <option value="">Todos los Sectores</option>
+              <option value="Alfa">Sector Alfa</option>
+              <option value="Beta">Sector Beta</option>
+              <option value="Gamma">Sector Gamma</option>
+              <option value="Delta">Sector Delta</option>
+            </select>
+
+            <button type="button" class="btn-secondary" id="btn-refresh-fleet" title="Recargar desde la API">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Cuadrícula Dinámica de Drones -->
+        <div class="fleet-grid" id="drones-container">
+          <!-- Renderizado dinámicamente mediante app.js -->
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Bahía de Despacho de Misiones -->
+      <aside class="panel" id="mission-dispatch-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Despachar Misión de Carga
+          </h2>
+        </div>
+
+        <div id="dispatch-alert" class="alert-box"></div>
+
+        <form id="dispatch-form">
+          <div class="form-group">
+            <label class="form-label" for="dispatch-drone-select">Dron Asignado (POST /api/missions)</label>
+            <select id="dispatch-drone-select" class="form-select" required>
+              <option value="">Seleccione un dron acoplado disponible...</option>
+            </select>
+            <span class="form-helper">Solo drones acoplados con batería &ge; 25% son elegibles.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cargo-type-input">Descripción de la Carga</label>
+            <input type="text" id="cargo-type-input" class="form-input" placeholder="ej. Kit de Medicamentos y Vacunas Críticas" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cargo-weight-input">Masa del Paquete (kg)</label>
+            <input type="number" id="cargo-weight-input" class="form-input" step="0.1" min="0.5" max="20" placeholder="ej. 4.2" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="destination-input">Punto de Destino / Waypoint</label>
+            <input type="text" id="destination-input" class="form-input" placeholder="ej. Hospital San Carlos - Bahía 4" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="priority-select">Prioridad de la Misión</label>
+            <select id="priority-select" class="form-select">
+              <option value="ALTA">Alta Prioridad (Despegue Inmediato)</option>
+              <option value="MEDIA" selected>Prioridad Media (Corredor Estándar)</option>
+              <option value="BAJA">Baja Prioridad (Carga Programada)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-submit-dispatch" style="width: 100%; margin-top: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Lanzar Misión (POST)
+          </button>
+        </form>
+
+        <div style="margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+            <span style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary);">Reinicio de Datos</span>
+            <button type="button" class="btn-secondary" id="btn-reset-data" style="font-size: 0.8125rem;">
+              Reiniciar Semillas
+            </button>
+          </div>
+          <p class="form-helper">Restaura la telemetría y misiones originales de prueba en caso de haber sido modificadas.</p>
+        </div>
+      </aside>
+    </main>
+
+    <!-- PESTAÑA 2: VISTA DE POSTMAN Y LAS 4 CONSULTAS -->
+    <main id="postman-view" class="postman-view tab-content" style="display: none;">
+      
+      <section class="postman-intro-banner">
+        <div>
+          <h2 class="postman-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+            Suite de Consultas Postman y Documentación REST
+          </h2>
+          <p class="postman-desc">
+            Esta sección documenta y ejecuta las <strong>4 consultas requeridas para el seguimiento</strong>. Puedes probar cada consulta directamente desde esta consola con 1 clic o descargar e importar la colección oficial a tu programa <strong>Postman</strong>.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+          <a href="/postman_collection.json" download="aeropulse_coleccion_postman.json" class="btn-primary" id="btn-download-postman">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Descargar Colección Postman (JSON)
+          </a>
+        </div>
+      </section>
+
+      <!-- Lista de las 4 Consultas Requeridas -->
+      <section class="queries-container" id="postman-queries-list">
+        
+        <!-- Consulta 1 -->
+        <article class="query-card" id="q1-card">
+          <div class="query-card-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span class="method-tag method-get">GET</span>
+              <span class="query-endpoint">/api/drones?status=en_vuelo</span>
+            </div>
+            <button type="button" class="query-run-btn" data-query="q1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Ejecutar Consulta 1
+            </button>
+          </div>
+          <p class="query-desc">
+            <strong>Consulta 1:</strong> Listar todos los drones actualmente en vuelo (filtrado mediante el parámetro query <code>status=en_vuelo</code>). Retorna velocidad, altitud y coordenadas GPS activas.
+          </p>
+          <pre class="code-display" id="q1-output"></pre>
+        </article>
+
+        <!-- Consulta 2 -->
+        <article class="query-card" id="q2-card">
+          <div class="query-card-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span class="method-tag method-get">GET</span>
+              <span class="query-endpoint">/api/drones/DRN-101</span>
+            </div>
+            <button type="button" class="query-run-btn" data-query="q2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Ejecutar Consulta 2
+            </button>
+          </div>
+          <p class="query-desc">
+            <strong>Consulta 2:</strong> Consultar la telemetría detallada, historial de sensores y misión activa de un dron específico a partir de su identificador único (<code>DRN-101</code>).
+          </p>
+          <pre class="code-display" id="q2-output"></pre>
+        </article>
+
+        <!-- Consulta 3 -->
+        <article class="query-card" id="q3-card">
+          <div class="query-card-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span class="method-tag method-post">POST</span>
+              <span class="query-endpoint">/api/missions</span>
+            </div>
+            <button type="button" class="query-run-btn" data-query="q3">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Ejecutar Consulta 3
+            </button>
+          </div>
+          <p class="query-desc">
+            <strong>Consulta 3:</strong> Despachar una nueva misión de carga crítica enviando un cuerpo JSON (Dron <code>DRN-102</code> o disponible, peso, destino y prioridad). Retorna código HTTP <code>201 Created</code> y código de rastreo.
+          </p>
+          <pre class="code-display" id="q3-output"></pre>
+        </article>
+
+        <!-- Consulta 4 -->
+        <article class="query-card" id="q4-card">
+          <div class="query-card-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span class="method-tag method-patch">PATCH</span>
+              <span class="query-endpoint">/api/drones/DRN-105/status</span>
+            </div>
+            <button type="button" class="query-run-btn" data-query="q4">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Ejecutar Consulta 4
+            </button>
+          </div>
+          <p class="query-desc">
+            <strong>Consulta 4:</strong> Actualizar el estado operativo del dron (por ejemplo, registrar su acoplamiento como <code>acoplado</code> tras recarga). Retorna el estado actualizado y registro de auditoría.
+          </p>
+          <pre class="code-display" id="q4-output"></pre>
+        </article>
+
+      </section>
+    </main>
+
+    <!-- Modal de Diagnóstico y Telemetría Detallada -->
+    <div class="modal-backdrop" id="drone-detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-drone-id">
+      <div class="modal-dialog">
+        <header class="modal-header">
+          <h3 class="modal-title" id="modal-drone-id">DRN-000 Diagnóstico de Telemetría</h3>
+          <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Cerrar ventana">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </header>
+        <div class="modal-body" id="modal-body-content">
+          <!-- Renderizado dinámico de métricas y JSON -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
